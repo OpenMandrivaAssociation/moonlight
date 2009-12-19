@@ -46,6 +46,7 @@ BuildRequires: libpulseaudio-devel
 BuildRequires: mono-devel
 BuildRequires: ndesk-dbus 
 BuildRequires: bison
+BuildRequires: zip
 Requires: %libname >= %version
 Provides: moon
 Obsoletes: moon
