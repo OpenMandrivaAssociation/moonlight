@@ -79,7 +79,7 @@ Group:Development/C++
 Summary: Open Source implementation of Silverlight
 Requires: %libname = %version-%release
 Provides: libmoon-devel = %version-%release
-Provides: %name-devel = %ersion-%release
+Provides: %name-devel = %version-%release
 
 %description -n %develname
 Moonlight is an open source implementation of Microsoft Silverlight
