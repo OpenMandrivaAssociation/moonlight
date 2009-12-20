@@ -1,6 +1,6 @@
 %define name moonlight
 %define version 2.0
-%define release %mkrel 1
+%define release %mkrel 2
 %define major 0
 %define libname %mklibname moon %major
 %define develname %mklibname -d moon
@@ -123,7 +123,7 @@ make
 rm -rf %{buildroot}
 %makeinstall_std 
 mkdir -p %buildroot%_libdir/mozilla/plugins
-ln -s %_libdir/moon/plugin/libmoonloader.so %buildroot%_libdir/mozilla/plugins
+ln -s %_libdir/moonlight/plugin/libmoonloader.so %buildroot%_libdir/mozilla/plugins
 rm -f %buildroot%_libdir/moon/plugin/README
 
 %clean
