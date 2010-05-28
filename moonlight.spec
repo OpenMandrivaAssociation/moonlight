@@ -1,6 +1,6 @@
 %define name moonlight
 %define version 2.0
-%define release %mkrel 3
+%define release %mkrel 4
 %define major 0
 %define libname %mklibname moon %major
 %define develname %mklibname -d moon
@@ -145,7 +145,6 @@ fi
 %defattr(-,root,root)
 %doc README TODO
 %_bindir/mopen
-%_bindir/munxap
 %_bindir/mxap
 %_bindir/respack
 %_bindir/smcs
@@ -171,7 +170,12 @@ fi
 %dir %_prefix/lib/%name/2.0
 %_prefix/lib/%name/2.0/*
 %dir %_libdir/%name
-%_libdir/%name/*.exe*
+%_libdir/%name/mopen.exe*
+%_libdir/%name/mxap.exe*
+%_libdir/%name/respack.exe*
+%_libdir/%name/sockpol.exe*
+%_libdir/%name/xaml2html.exe*
+%_libdir/%name/xamlg.exe*
 %dir %_libdir/%name/plugin
 %_libdir/%name/plugin/*.*
 %_mandir/man1/mopen.1*
@@ -187,6 +191,8 @@ fi
 
 %files -n %develname
 %defattr(-,root,root)
+%_bindir/munxap
+%_libdir/%name/munxap.exe*
 %_libdir/libmoon.so
 %_libdir/*.la
 %_datadir/pkgconfig/%{name}*.pc
