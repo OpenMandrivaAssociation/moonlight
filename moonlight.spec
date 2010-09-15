@@ -48,7 +48,11 @@ BuildRequires: dbus-glib-devel
 BuildRequires: libalsa-devel
 BuildRequires: libpulseaudio-devel
 BuildRequires: mono-devel >= 2.6
+%if %mdvver >= 201100
 BuildRequires: ndesk-dbus-devel 
+%else
+BuildRequires: ndesk-dbus
+%endif
 BuildRequires: curl-devel
 BuildRequires: bison
 BuildRequires: zip
