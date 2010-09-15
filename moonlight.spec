@@ -1,6 +1,6 @@
-%define name moonlight
-%define version 2.0
-%define release %mkrel 5
+ %define name moonlight
+%define version 2.3
+%define release %mkrel 1
 %define major 0
 %define libname %mklibname moon %major
 %define develname %mklibname -d moon
@@ -11,15 +11,18 @@ Summary: Open Source implementation of Silverlight
 Name: %{name}
 Version: %{version}
 Release: %{release}
-Source0: http://ftp.novell.com/pub/mono/sources/moon/%name-%{version}.tar.bz2
-Source1: http://www.go-mono.com/sources/mono/mono-%monover.tar.bz2
-Source2: http://www.go-mono.com/sources/mono-basic/mono-basic-%monobasicver.tar.bz2
+Source0: http://ftp.novell.com/pub/mono/sources/moon/%version/%name-%{version}.tar.bz2
+#gw these differ from the release tarballs
+Source1: http://ftp.novell.com/pub/mono/sources/moon/%version/mono-%monover.tar.bz2
+Source2: http://ftp.novell.com/pub/mono/sources/moon/%version/mono-basic-%monobasicver.tar.bz2
 Patch: moon-2.0-format-strings.patch
 Patch1: moon-2.0-fix-linkage.patch
-Patch2: moon-2.0-firefox-3.6-detection.patch
 #gw fix building with --no-undefined enabled
 Patch5: mono-2.0-fix-linking.patch
 Patch8: mono-2.6-format-strings.patch
+Patch9:  bad-register.patch
+Patch10: r159607.patch
+Patch11: moonlight-2.3-firefox-4.0.patch
 License: LGPLv2
 Group: System/Libraries
 Url: http://www.mono-project.com/Moonlight
@@ -38,13 +41,15 @@ BuildRequires: gnome-desktop-sharp-devel
 %else
 BuildRequires: gnome-desktop-sharp
 %endif
+BuildRequires: chrpath
 BuildRequires: libgtk+2.0-devel
 BuildRequires: libmagick-devel
 BuildRequires: dbus-glib-devel
 BuildRequires: libalsa-devel
 BuildRequires: libpulseaudio-devel
-BuildRequires: mono-devel
-BuildRequires: ndesk-dbus 
+BuildRequires: mono-devel >= 2.6
+BuildRequires: ndesk-dbus-devel 
+BuildRequires: curl-devel
 BuildRequires: bison
 BuildRequires: zip
 Requires: %libname >= %version
@@ -91,48 +96,71 @@ Adobe Flash.
 %setup -q -n %name-%version -a 1 -a 2
 %patch -p1
 %patch1 -p1 -b .fix-linking
-%if %mdvver >= 201010
-%patch2 -p1
+%patch10
+%if %mdvver >= 201100
+%patch11 -p1
 %endif
 autoreconf -fi
 cd mono-%monover
 %patch5 -p1 -b .linking
 %patch8 -p1 -b .format-strings
-autoreconf -fi
+%patch9
+cd ../mono-basic-%monobasicver/vbnc/vbnc
+#gw rename source file with parenthesis
+sed -i -e "s^(^^" -e "s^)^^" vbnc.exe.sources
+for x in source/Parser/Parser\(*.vb;do
+  mv "$x" $(echo "$x" | sed -e "s^(^^" -e "s^)^^")
+done
+
 
 %build
 cd mono-%monover
-%configure2_5x
-make
-cd ../mono-basic-%monobasicver
-export LC_ALL=UTF-8
-./configure --prefix=%_prefix
-make
+./configure --prefix=%{_builddir}/%name-%version/install \
+            --with-mcs-docs=no \
+            --with-ikvm-native=no
+
+make EXTERNAL_MCS=false EXTERNAL_RUNTIME=false
+make install
+# libtool is evil, if the .la is present things get jacked up
+find %{_builddir}/%name-%version/install -name \*.la -delete
 cd ..
+# Configure against the junk install of mono
+export PATH=%{_builddir}/%name-%version/install/bin:${PATH}
+export LD_LIBRARY_PATH=%{_builddir}/%name-%version/install/lib:${LD_LIBRARY_PATH}
+export PKG_CONFIG_PATH=%{_builddir}/%name-%version/install/lib/pkgconfig:${PKG_CONFIG_PATH}
+# And then we build moonlight
 %configure2_5x \
   --with-ff3=yes \
 %if %mdvver >= 200900
   --with-cairo=system \
 %endif
- --with-mcspath=`pwd`/mono-%monover/mcs --with-mono-basic-path=`pwd`/mono-basic-%monobasicver
-
+ --with-mcspath=`pwd`/mono-%monover/mcs --with-mono-basic-path=`pwd`/mono-basic-%monobasicver --with-curl=system \
+--enable-desktop-support --enable-sdk
+# We need the system gac for gtk-sharp
+# Only if we're linking to the junk mono
+export MONO_GAC_PREFIX=%{_builddir}/%name-%version/install:%{_prefix}
 #gw parallel build does not work in 2.0
 make
 
 %install
 rm -rf %{buildroot}
+
 %makeinstall_std 
 mkdir -p %buildroot%_libdir/mozilla/plugins
+export PATH=%{_builddir}/%name-%version/install/bin:${PATH}
+export LD_LIBRARY_PATH=%{_builddir}/%name-%version/install/lib:${LD_LIBRARY_PATH}
+export PKG_CONFIG_PATH=%{_builddir}/%name-%version/install/lib/pkgconfig:${PKG_CONFIG_PATH}
+%{__make} install DESTDIR=%{buildroot}
+# Copy the custom libmono.so.0 for the plugin to use
+install -m 644 %{_builddir}/%name-%version/install/lib/libmono.so.0 %{buildroot}%{_libdir}/moonlight/
+# Make the loader pull in the correct libmono
+chrpath -r %{_libdir}/moonlight %{buildroot}%{_libdir}/moonlight/plugin/libmoonplugin.so
+chrpath -r  %{_libdir}/moonlight %{buildroot}%{_libdir}/moonlight/plugin/libmoonplugin.so
 ln -s %_libdir/moonlight/plugin/libmoonloader.so %buildroot%_libdir/mozilla/plugins
 rm -f %buildroot%_libdir/moon/plugin/README
 
 %clean
 rm -rf %{buildroot}
-
-%if %mdkversion < 200900
-%post -n %libname -p /sbin/ldconfig
-%postun -n %libname -p /sbin/ldconfig
-%endif
 
 %post doc
 %_bindir/monodoc --make-index > /dev/null
@@ -188,6 +216,7 @@ fi
 %files -n %libname
 %defattr(-,root,root)
 %_libdir/libmoon.so.%{major}*
+%{_libdir}/moonlight/libmono.so.%{major}*
 
 %files -n %develname
 %defattr(-,root,root)
