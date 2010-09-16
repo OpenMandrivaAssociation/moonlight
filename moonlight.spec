@@ -1,6 +1,6 @@
  %define name moonlight
 %define version 2.3
-%define release %mkrel 1
+%define release %mkrel 2
 %define major 0
 %define libname %mklibname moon %major
 %define develname %mklibname -d moon
@@ -35,12 +35,8 @@ BuildRequires: xulrunner-devel
 %else
 BuildRequires: xulrunner-devel-unstable
 %endif
-%if %mdvver >= 200900
 BuildRequires: libcairo-devel >= 1.6
 BuildRequires: gnome-desktop-sharp-devel
-%else
-BuildRequires: gnome-desktop-sharp
-%endif
 BuildRequires: chrpath
 BuildRequires: libgtk+2.0-devel
 BuildRequires: libmagick-devel
@@ -133,11 +129,10 @@ export PATH=%{_builddir}/%name-%version/install/bin:${PATH}
 export LD_LIBRARY_PATH=%{_builddir}/%name-%version/install/lib:${LD_LIBRARY_PATH}
 export PKG_CONFIG_PATH=%{_builddir}/%name-%version/install/lib/pkgconfig:${PKG_CONFIG_PATH}
 # And then we build moonlight
-%configure2_5x \
+%configure2_5x --without-testing --without-performance --without-examples \
+  --disable-debug --disable-sanity \
   --with-ff3=yes \
-%if %mdvver >= 200900
   --with-cairo=system \
-%endif
  --with-mcspath=`pwd`/mono-%monover/mcs --with-mono-basic-path=`pwd`/mono-basic-%monobasicver --with-curl=system \
 --enable-desktop-support --enable-sdk
 # We need the system gac for gtk-sharp
@@ -158,8 +153,7 @@ export PKG_CONFIG_PATH=%{_builddir}/%name-%version/install/lib/pkgconfig:${PKG_C
 # Copy the custom libmono.so.0 for the plugin to use
 install -m 644 %{_builddir}/%name-%version/install/lib/libmono.so.0 %{buildroot}%{_libdir}/moonlight/
 # Make the loader pull in the correct libmono
-chrpath -r %{_libdir}/moonlight %{buildroot}%{_libdir}/moonlight/plugin/libmoonplugin.so
-chrpath -r  %{_libdir}/moonlight %{buildroot}%{_libdir}/moonlight/plugin/libmoonplugin.so
+chrpath -r  %{_libdir}/moonlight %{buildroot}%{_libdir}/moonlight/plugin/libmoon*.so
 ln -s %_libdir/moonlight/plugin/libmoonloader.so %buildroot%_libdir/mozilla/plugins
 rm -f %buildroot%_libdir/moon/plugin/README
 
@@ -192,10 +186,6 @@ fi
 %_libdir/mozilla/plugins/libmoon*
 %dir %_prefix/lib/mono/%name
 %_prefix/lib/mono/%name/*.dll
-%if %mdvver >= 200900
-#gw TODO: put somewhere else
-%_libdir/libshocker.so
-%endif
 %dir %_prefix/lib/%name
 %dir %_prefix/lib/%name/2.0-redist
 %_prefix/lib/%name/2.0-redist/*
