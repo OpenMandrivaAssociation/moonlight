@@ -1,6 +1,3 @@
- %define name moonlight
-%define version 2.3
-%define release %mkrel 2
 %define major 0
 %define libname %mklibname moon %major
 %define develname %mklibname -d moon
@@ -8,9 +5,9 @@
 %define monobasicver 2.6
 
 Summary: Open Source implementation of Silverlight
-Name: %{name}
-Version: %{version}
-Release: %{release}
+Name: moonlight
+Version: 2.4.1
+Release: 1
 Source0: http://ftp.novell.com/pub/mono/sources/moon/%version/%name-%{version}.tar.bz2
 #gw these differ from the release tarballs
 Source1: http://ftp.novell.com/pub/mono/sources/moon/%version/mono-%monover.tar.bz2
@@ -21,8 +18,9 @@ Patch1: moon-2.0-fix-linkage.patch
 Patch5: mono-2.0-fix-linking.patch
 Patch8: mono-2.6-format-strings.patch
 Patch9:  bad-register.patch
-Patch10: r159607.patch
 Patch11: moonlight-2.3-firefox-4.0.patch
+Patch12: moonlight-2.4.1-use-correct-mono-lib-flags.patch
+Patch13: moonlight-2.4.1-drop-dead-curl-header.patch
 License: LGPLv2
 Group: System/Libraries
 Url: http://www.mono-project.com/Moonlight
@@ -93,17 +91,18 @@ Adobe Flash.
 
 
 %prep
-%setup -q -n %name-%version -a 1 -a 2
+%setup -q -a 1 -a 2
 %patch -p1
-%patch1 -p1 -b .fix-linking
-%patch10
+%patch1 -p1 -b .fix-linking~
 %if %mdvver >= 201100
 %patch11 -p1
 %endif
+%patch12 -p1 -b mono_libs~
+%patch13 -p1 -b .curl~
 autoreconf -fi
 cd mono-%monover
-%patch5 -p1 -b .linking
-%patch8 -p1 -b .format-strings
+%patch5 -p1 -b .linking~
+%patch8 -p1 -b .format-strings~
 %patch9
 cd ../mono-basic-%monobasicver/vbnc/vbnc
 #gw rename source file with parenthesis
@@ -114,30 +113,32 @@ done
 
 
 %build
-cd mono-%monover
-./configure --prefix=%{_builddir}/%name-%version/install \
+TOP=`pwd`
+cd mono-%{monover}
+./configure --prefix=${TOP}/install \
             --with-mcs-docs=no \
             --with-ikvm-native=no
 
 make EXTERNAL_MCS=false EXTERNAL_RUNTIME=false
 make install
-# libtool is evil, if the .la is present things get jacked up
-find %{_builddir}/%name-%version/install -name \*.la -delete
 cd ..
+# libtool is evil, if the .la is present things get jacked up
+find install -name \*.la -delete
 # Configure against the junk install of mono
-export PATH=%{_builddir}/%name-%version/install/bin:${PATH}
-export LD_LIBRARY_PATH=%{_builddir}/%name-%version/install/lib:${LD_LIBRARY_PATH}
-export PKG_CONFIG_PATH=%{_builddir}/%name-%version/install/lib/pkgconfig:${PKG_CONFIG_PATH}
+export PATH=${TOP}/install/bin:${PATH}
+export LD_LIBRARY_PATH=${TOP}/install/lib:${LD_LIBRARY_PATH}
+export PKG_CONFIG_PATH=${TOP}/install/lib/pkgconfig:${PKG_CONFIG_PATH}
 # And then we build moonlight
 %configure2_5x --without-testing --without-performance --without-examples \
   --disable-debug --disable-sanity \
   --with-ff3=yes \
   --with-cairo=system \
- --with-mcspath=`pwd`/mono-%monover/mcs --with-mono-basic-path=`pwd`/mono-basic-%monobasicver --with-curl=system \
---enable-desktop-support --enable-sdk
+  --with-mcspath=${TOP}/mono-%{monover}/mcs --with-mono-basic-path=${TOP}/mono-basic-%{monobasicver} \
+  --with-curl=system \
+  --enable-desktop-support --enable-sdk
 # We need the system gac for gtk-sharp
 # Only if we're linking to the junk mono
-export MONO_GAC_PREFIX=%{_builddir}/%name-%version/install:%{_prefix}
+export MONO_GAC_PREFIX=${TOP}/install:%{_prefix}
 #gw parallel build does not work in 2.0
 make
 
