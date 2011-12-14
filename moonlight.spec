@@ -7,7 +7,7 @@
 Summary: Open Source implementation of Silverlight
 Name: moonlight
 Version: 2.4.1
-Release: 1
+Release: 2
 Source0: http://ftp.novell.com/pub/mono/sources/moon/%version/%name-%{version}.tar.bz2
 #gw these differ from the release tarballs
 Source1: http://ftp.novell.com/pub/mono/sources/moon/%version/mono-%monover.tar.bz2
