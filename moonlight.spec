@@ -33,7 +33,7 @@ BuildRequires: xulrunner-devel
 %else
 BuildRequires: xulrunner-devel-unstable
 %endif
-BuildRequires: libcairo-devel >= 1.6
+BuildRequires: cairo-devel >= 1.6
 BuildRequires: gnome-desktop-sharp-devel
 BuildRequires: chrpath
 BuildRequires: libgtk+2.0-devel
