@@ -25,7 +25,11 @@ License: LGPLv2
 Group: System/Libraries
 Url: http://www.mono-project.com/Moonlight
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+%if %mdvver >= 201200
+BuildRequires: ffmpeg0.7-devel
+%else
 BuildRequires: ffmpeg-devel
+%endif
 BuildRequires: libxtst-devel
 BuildRequires: libxrandr-devel
 %if %mdvver >= 201000
