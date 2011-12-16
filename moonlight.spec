@@ -19,7 +19,6 @@ Patch5: mono-2.0-fix-linking.patch
 Patch8: mono-2.6-format-strings.patch
 Patch9:  bad-register.patch
 Patch11: moonlight-2.3-firefox-4.0.patch
-Patch12: moonlight-2.4.1-use-correct-mono-lib-flags.patch
 Patch13: moonlight-2.4.1-drop-dead-curl-header.patch
 License: LGPLv2
 Group: System/Libraries
@@ -101,7 +100,6 @@ Adobe Flash.
 %if %mdvver >= 201100
 %patch11 -p1
 %endif
-%patch12 -p1 -b mono_libs~
 %patch13 -p1 -b .curl~
 autoreconf -fi
 cd mono-%monover
@@ -222,7 +220,6 @@ fi
 %_bindir/munxap
 %_libdir/%name/munxap.exe*
 %_libdir/libmoon.so
-%_libdir/*.la
 %_datadir/pkgconfig/%{name}*.pc
 
 %files doc
