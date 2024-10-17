@@ -22,7 +22,7 @@ Patch11: moonlight-2.3-firefox-4.0.patch
 Patch13: moonlight-2.4.1-drop-dead-curl-header.patch
 License: LGPLv2
 Group: System/Libraries
-Url: http://www.mono-project.com/Moonlight
+Url: https://www.mono-project.com/Moonlight
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %if %mdvver >= 201200
 BuildRequires: ffmpeg0.7-devel
