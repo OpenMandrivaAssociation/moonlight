@@ -25,6 +25,11 @@ Group: System/Libraries
 Url: https://www.mono-project.com/Moonlight
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %if %mdvver >= 201200
+BuildRequires:	autoconf
+BuildRequires:	automake
+BuildRequires:	libtool-base
+BuildRequires:	slibtool
+BuildRequires:	make
 BuildRequires: ffmpeg0.7-devel
 %else
 BuildRequires: ffmpeg-devel
